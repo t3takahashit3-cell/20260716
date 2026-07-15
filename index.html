@@ -64,6 +64,7 @@
   }
   .btn:active { transform: scale(0.95); }
   .btn-yellow { background-color: var(--secondary-color); color: #333; }
+  .btn-orange { background-color: #ff9800; color: white; }
   .btn-gray { background-color: #9e9e9e; color: white; cursor: not-allowed; }
   .btn-red { background-color: #e53935; color: white; }
   
@@ -90,6 +91,35 @@
   }
   .company-card:hover { border-color: var(--primary-color); transform: translateY(-3px); }
   .company-card.selected { border-color: var(--primary-color); background-color: #e8f5e9; }
+
+  /* ページ1.5: お題表示 */
+  .task-highlight-box {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    border: 5px solid #ff9800;
+    padding: 40px 20px;
+    border-radius: 20px;
+    margin: 30px 0;
+    text-align: center;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  }
+  .task-highlight-box .task-label {
+    display: inline-block;
+    background: #e65100;
+    color: white;
+    padding: 8px 25px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 22px;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+  }
+  .task-highlight-box p {
+    font-size: 26px;
+    font-weight: bold;
+    color: #3e2723;
+    line-height: 1.6;
+    margin: 0;
+  }
   
   /* ページ2: 案リスト＆スロット */
   .plan-list { margin-top: 20px; }
@@ -169,16 +199,27 @@
 </header>
 
 <div class="container">
-  <!-- Page 1: 企業選択 -->
   <div id="page1" class="page active">
     <h2>あなたが担当している企業を選択してください</h2>
     <div class="company-grid" id="companyGrid"></div>
     <div class="controls">
-      <button class="btn btn-gray" id="btn-to-page2" onclick="goToPage2()" disabled>決定</button>
+      <button class="btn btn-gray" id="btn-to-page-task" onclick="goToTaskPage()" disabled>決定</button>
     </div>
   </div>
 
-  <!-- Page 2: 案選択 -->
+  <div id="page-task" class="page">
+    <h2>あなたが担当する企業のお題（ミッション）</h2>
+    <h3 id="pt-company-name" style="text-align: center; color: var(--primary-color); font-size: 22px; margin-top: 20px;"></h3>
+    <div class="task-highlight-box">
+      <div class="task-label">MISSION</div>
+      <p id="pt-task"></p>
+    </div>
+    <div class="controls">
+      <button class="btn" onclick="goToPage1()" style="background:#757575;">戻る</button>
+      <button class="btn btn-orange" onclick="attemptGoToNextFromTask()">次に進む</button>
+    </div>
+  </div>
+
   <div id="page2" class="page">
     <h2 id="p2-company-name"></h2>
     <div class="task-box" id="p2-task"></div>
@@ -192,12 +233,11 @@
     <div class="plan-list" id="planList"></div>
     
     <div class="controls">
-      <button class="btn" onclick="goToPage1()" style="background:#757575;">戻る</button>
-      <button class="btn btn-gray" id="btn-to-page3" onclick="goToPage3()" disabled>決定</button>
+      <button class="btn" onclick="goToTaskPage()" style="background:#757575;">戻る</button>
+      <button class="btn btn-gray" id="btn-to-page3" onclick="attemptGoToPage3()" disabled>決定</button>
     </div>
   </div>
 
-  <!-- Page 3: 情報リスト -->
   <div id="page3" class="page">
     <h2 id="p3-company-name"></h2>
     <div class="task-box" id="p3-task"></div>
@@ -209,8 +249,8 @@
         <thead>
           <tr>
             <th style="width:5%;">No</th>
-            <th style="width:30%;">調べること</th>
-            <th style="width:35%;">具体的な調べ方・ソース</th>
+            <th style="width:35%;">調べること</th>
+            <th style="width:30%;">具体的な調べ方・ソース</th>
             <th style="width:30%;">検索キーワード例</th>
           </tr>
         </thead>
@@ -224,18 +264,16 @@
   </div>
 </div>
 
-<!-- ヒントボタン (Page3でのみ表示) -->
 <button id="floatingHintBtn" class="btn btn-yellow floating-hint-btn" style="display:none;" onclick="openHint()">💡 情報調べのヒント</button>
 
-<!-- ヒントモーダル -->
 <div class="modal-overlay" id="hintModal">
   <div class="modal-content">
     <span class="close-btn" onclick="closeHint()">&times;</span>
     <h2>情報獲得のヒント集</h2>
-    <p>ただ「調べる」のではなく、自ら情報をつかみ取る「獲得」を意識しよう！[cite: 2]</p>
+    <p>ただ「調べる」のではなく、自ら情報をつかみ取る「獲得」を意識しよう！</p>
     
     <div class="hint-section">
-      <h3>🔍 インターネット検索のコツ[cite: 2]</h3>
+      <h3>🔍 インターネット検索のコツ</h3>
       <ul>
         <li><strong>AND検索：</strong> キーワードの間にスペースを入れる（例：休耕地対策 伊那市）</li>
         <li><strong>NOT検索：</strong> 除外したい単語の前にマイナス「-」を入れる（例：研修 -新入社員）</li>
@@ -246,7 +284,7 @@
     </div>
     
     <div class="hint-section">
-      <h3>📊 統計データの探し方[cite: 2]</h3>
+      <h3>📊 統計データの探し方</h3>
       <ul>
         <li><strong>e-Stat：</strong> 日本の政府統計ポータルサイト。人口や産業データならここ。</li>
         <li><strong>RESAS（リーサス）：</strong> 地域経済分析システム。地域の課題をグラフで確認できる。</li>
@@ -255,7 +293,7 @@
     </div>
     
     <div class="hint-section">
-      <h3>📚 本・図書館の活用法[cite: 2]</h3>
+      <h3>📚 本・図書館の活用法</h3>
       <ul>
         <li>ネットは「何が起きているか」、本は「なぜ起きているか」を知るのが得意。</li>
         <li>本は最初から読まずに<strong>「目次」</strong>を見て必要な部分だけ読もう！</li>
@@ -264,7 +302,7 @@
     </div>
     
     <div class="hint-section">
-      <h3>🏃 現地調査（フィールドワーク等）[cite: 2]</h3>
+      <h3>🏃 現地調査（フィールドワーク等）</h3>
       <ul>
         <li><strong>インタビュー：</strong> 当事者の「なぜそう思うのか」という深い理由・本音が聞ける。</li>
         <li><strong>アンケート：</strong> Googleフォーム等を使って多くの人から客観的な割合（％）を集める。</li>
@@ -275,7 +313,6 @@
 
 <script>
 // --- データ定義 ---
-// 企業一覧資料より作成
 const db = [
   {
     name: "社会福祉法人サン・ビジョン サンサンワイナリー",
@@ -973,11 +1010,11 @@ function selectCompany(index, cardElement) {
   // UI更新
   document.querySelectorAll(".company-card").forEach(c => c.classList.remove("selected"));
   cardElement.classList.add("selected");
-  document.getElementById("btn-to-page2").classList.remove("btn-gray");
-  document.getElementById("btn-to-page2").disabled = false;
+  document.getElementById("btn-to-page-task").classList.remove("btn-gray");
+  document.getElementById("btn-to-page-task").disabled = false;
 }
 
-// ページ遷移
+// ページ切り替え用ユーティリティ
 function showPage(pageId) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.getElementById(pageId).classList.add("active");
@@ -985,14 +1022,47 @@ function showPage(pageId) {
   document.getElementById("floatingHintBtn").style.display = (pageId === "page3") ? "inline-block" : "none";
 }
 
+// --- 画面遷移ロジック ---
+
+// トップページに戻る
 function goToPage1() {
   showPage("page1");
 }
 
+// トップページ → お題表示ページ (パスワードなしで即座に遷移)
+function goToTaskPage() {
+  const company = db[selectedCompanyIndex];
+  document.getElementById("pt-company-name").textContent = company.name;
+  
+  // 課題テキストの先頭にある「課題：」を削ってきれいに表示する
+  let taskText = company.task;
+  if(taskText.startsWith("課題：")) {
+    taskText = taskText.substring(3);
+  }
+  document.getElementById("pt-task").textContent = taskText;
+  
+  showPage("page-task");
+}
+
+// お題表示ページ → 2ページ目 (ここでパスワード a を要求)
+function attemptGoToNextFromTask() {
+  const keyword = prompt("次に進むためのパスワードを入力してください。");
+  if (keyword) {
+    const kw = keyword.trim().toLowerCase();
+    // 半角a、全角ａ、[a]、[ａ]などを許容
+    if (kw === "a" || kw === "ａ" || kw === "[a]" || kw === "[ａ]") {
+      goToPage2();
+    } else {
+      alert("パスワードが違います。");
+    }
+  }
+}
+
+// 2ページ目（案の選択）の表示処理
 function goToPage2() {
   const company = db[selectedCompanyIndex];
   
-  // ルビコンの特別対応（案が1つだけなのでPage2スキップ）
+  // ルビコンの特別対応（案が1つだけなのでPage2スキップしてPage3へ）
   if(company.name === "ルビコン株式会社") {
     selectedPlanIndex = 0;
     goToPage3();
@@ -1032,6 +1102,21 @@ function selectPlan(index) {
   document.getElementById("btn-to-page3").disabled = false;
 }
 
+// 2ページ目 → 3ページ目 (パスワード b を要求)
+function attemptGoToPage3() {
+  const keyword = prompt("次に進むためのパスワードを入力してください。");
+  if (keyword) {
+    const kw = keyword.trim().toLowerCase();
+    // 半角b、全角ｂ、[b]、[ｂ]などを許容
+    if (kw === "b" || kw === "ｂ" || kw === "[b]" || kw === "[ｂ]") {
+      goToPage3();
+    } else {
+      alert("パスワードが違います。");
+    }
+  }
+}
+
+// 3ページ目（調べることリスト）の表示処理
 function goToPage3() {
   const company = db[selectedCompanyIndex];
   const plan = company.plans[selectedPlanIndex];
